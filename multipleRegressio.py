@@ -21,18 +21,17 @@ df = pd.read_csv("housepricez.csv")
 # df_positives = df.loc[df['Outcome'] == 1]
 df_positives = df
 
-feature_vectors = df_positives[["Bedrooms","Bathrooms","Sqft_living","Sqft_lot","Floors","Grade"]].to_numpy()
+feature_vectors = df_positives[["Price", "Bedrooms", "Bathrooms", "Sqft_living", "Grade", "Sqft_above", "Sqft_basement",
+    "Long", "Sqft_living15"]].to_numpy()
 output_vectors = df_positives[['Price']].to_numpy()
-w_vector = np.zeros(len(feature_vectors[0]), )
+
+test_outputs_original = output_vectors[10001:]
 
 feature_means = np.mean(feature_vectors, axis=0)
 feature_standardd = np.std(feature_vectors, axis=0)
 
 output_mean = np.mean(output_vectors, axis=0)
 output_standardd = np.std(output_vectors, axis=0)
-
-print(output_standardd)
-
 
 def standard_normalisation(features, output_vectors):
     features = (features - feature_means)/feature_standardd
@@ -42,6 +41,23 @@ def standard_normalisation(features, output_vectors):
     return (features, output_vectors)
 
 feature_vectors, output_vectors = standard_normalisation(feature_vectors, output_vectors)
+
+
+training_features = feature_vectors[0:10000]
+test_features = feature_vectors[10001:]
+
+training_outputs = output_vectors[0:10000]
+test_outputs = output_vectors[10001:]
+
+
+w_vector = np.zeros(len(training_features[0]), )
+
+
+
+print(output_standardd)
+
+
+
 
 # print(feature_vectors)
 # print(output_vectors)
@@ -115,12 +131,17 @@ def gradient_descent(w, b, learning_rate, feature_vectors, margin_of_error):
 
     return (w, b)
 
-results = gradient_descent(w_vector, 0, 1, feature_vectors, 0.0001)
+results = gradient_descent(w_vector, 0, 0.1 , training_features, 0.0001)
 
 w_vector, b = results
 ## b = 0.0000000000000000000000001
 ## w_vector = [-0.09064125, 0.08622709, 0.22288214, 0.01455121, 0.00989126, 0.13730702, 0.1104075, 0.04684105, 0.3067629, 0.20787016, 0.07358903, -0.2094933, 0.02173129, -0.08484939, 0.22741904, -0.08252611, 0.04074504, -0.02848463]
 ## print(w_vector)
 
+errors = []
 
-print(f" {((np.dot(w_vector, feature_vectors[28]) + b) * output_standardd) + output_mean} ")
+for i in range(len(test_outputs_original)):
+    errors.append(abs((np.dot(w_vector, test_features[i]) + b) * output_standardd + output_mean - test_outputs_original[i])/test_outputs_original[i]) 
+
+print(f"Average percent error: {str(np.mean(errors) * 100)}%")
+
