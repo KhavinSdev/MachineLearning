@@ -3,11 +3,23 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 
+x = np.random.rand(5)
+y = np.random.rand(5)
+
+plt.ion()
+fig, ax = plt.subplots()
+x, y = [],[]
+sc = ax.scatter(x,y, s=5)
+plt.xlim(0,400)
+plt.ylim(0,0.8)
+plt.draw()
+
+
+
 df = pd.read_csv("housepricez.csv")
 
 # df_positives = df.loc[df['Outcome'] == 1]
 df_positives = df
-
 
 feature_vectors = df_positives[["Bedrooms","Bathrooms","Sqft_living","Sqft_lot","Floors","Grade"]].to_numpy()
 output_vectors = df_positives[['Price']].to_numpy()
@@ -44,6 +56,8 @@ def cost_calculate(w_vector, x_vectors, b):
 
     return sum/len(x_vectors)
 
+
+
 def w_derivative(w_vector, x_vectors, b):
 
     sum = 0
@@ -66,10 +80,12 @@ def b_derivative(w_vector, x_vectors, b):
     
     return sum/len(x_vectors)
 
-def gradient_descent(w, b, learning_rate, feature_vectors):
+def gradient_descent(w, b, learning_rate, feature_vectors, margin_of_error):
     trainings = 0
     cost_of_trainin = cost_calculate(w, feature_vectors, b)
-    while  abs(cost_of_trainin) > 0.0015 and trainings < 102:
+    cost_minimized = False
+    
+    while  not cost_minimized and trainings < 102:
         w_gradien = w_derivative(w, feature_vectors, b)
         b_gradien = b_derivative(w, feature_vectors, b)
 
@@ -79,16 +95,32 @@ def gradient_descent(w, b, learning_rate, feature_vectors):
         print(f" {w} + {b}")
         cost_of_trainin = cost_calculate(w, feature_vectors, b)
         # time.sleep(2) 
+        print(cost_of_trainin)
         trainings = trainings + 1
+
+        def cost_difference(cost, margin):
+            if (len(y) > 0):
+                return abs(y[-1] - cost) < margin
+            else:
+                return False
+        
+        cost_minimized = cost_difference(cost_of_trainin, margin_of_error)
+        x.append(trainings)
+        y.append(cost_of_trainin)
+        
+        sc.set_offsets(np.c_[x,y])
+        fig.canvas.draw_idle()
+        plt.show()
+        plt.pause(0.002)
 
     return (w, b)
 
-results = gradient_descent(w_vector, 0, 0.1, feature_vectors)
+results = gradient_descent(w_vector, 0, 1, feature_vectors, 0.0001)
 
 w_vector, b = results
-# b = 0.0000000000000000000000001
-# w_vector = [-0.09064125, 0.08622709, 0.22288214, 0.01455121, 0.00989126, 0.13730702, 0.1104075, 0.04684105, 0.3067629, 0.20787016, 0.07358903, -0.2094933, 0.02173129, -0.08484939, 0.22741904, -0.08252611, 0.04074504, -0.02848463]
-# print(w_vector)
+## b = 0.0000000000000000000000001
+## w_vector = [-0.09064125, 0.08622709, 0.22288214, 0.01455121, 0.00989126, 0.13730702, 0.1104075, 0.04684105, 0.3067629, 0.20787016, 0.07358903, -0.2094933, 0.02173129, -0.08484939, 0.22741904, -0.08252611, 0.04074504, -0.02848463]
+## print(w_vector)
 
 
-print(f" {((np.dot(w_vector, feature_vectors[29]) + b) * output_standardd) + output_mean} ")
+print(f" {((np.dot(w_vector, feature_vectors[28]) + b) * output_standardd) + output_mean} ")
